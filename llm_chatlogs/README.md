@@ -2,9 +2,9 @@
 
 These files disclose the LLM assistance used for MP2. They are actual exported conversations, not summaries or fabricated transcripts.
 
-- [codex-rollout-*.md](codex-rollout-*.md): Codex planning, review, verification, and deployment conversations available in local session storage.
-- [cursor-main-*.md](cursor-main-*.md): Cursor implementation conversation.
-- [cursor-agent-*.md](cursor-agent-*.md): Cursor agent conversations contributing implementation and redesign work.
+- `codex-rollout-*.md`: Codex planning, review, verification, and deployment conversations available in local session storage.
+- `cursor-main-*.md`: Cursor implementation conversation.
+- `cursor-agent-*.md`: Cursor agent conversations contributing implementation and redesign work.
 
 Exports retain user and assistant text. Internal prompts, private reasoning, raw tool calls/results, and UI metadata are excluded. Code written through tools is provided in the submitted source. Local workspace/runtime paths and recognizable credential tokens are redacted. Agent user-role messages may originate from the coordinating agent rather than the human student.
 
