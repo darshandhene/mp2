@@ -15,17 +15,20 @@ export function CatalogStatus() {
     }
   }
 
-  if (status === "loading") {
-    return <p className={styles.loading}>Loading meals…</p>;
-  }
+  const retryButton = (
+    <button type="button" className={styles.retry} onClick={() => void onRetry()} disabled={pending}>
+      {pending ? "Retrying…" : "Retry"}
+    </button>
+  );
 
   if (status === "error") {
     return (
       <div className={styles.notice} role="alert">
-        <p>{error ?? "The meal list could not be loaded."}</p>
-        <button type="button" onClick={() => void onRetry()} disabled={pending}>
-          {pending ? "Retrying…" : "Retry"}
-        </button>
+        <p className={styles.message}>
+          Recipes could not be loaded.
+          {error && <span className={styles.detail}> {error}</span>}
+        </p>
+        {retryButton}
       </div>
     );
   }
@@ -33,10 +36,10 @@ export function CatalogStatus() {
   if (status === "partial") {
     return (
       <div className={styles.notice} role="status">
-        <p>Some categories did not load: {failedCategories.join(", ")}. Showing the meals that arrived.</p>
-        <button type="button" onClick={() => void onRetry()} disabled={pending}>
-          {pending ? "Retrying…" : "Retry"}
-        </button>
+        <p className={styles.message}>
+          Some categories did not load: {failedCategories.join(", ")}. Showing the recipes that arrived.
+        </p>
+        {retryButton}
       </div>
     );
   }

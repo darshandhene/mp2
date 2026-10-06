@@ -1,77 +1,114 @@
-import { Link, useSearchParams } from "react-router-dom";
+import { useId, useRef } from "react";
+import { Link } from "react-router-dom";
+import { CollectionIntro } from "../components/CollectionIntro.tsx";
+import { DiscoveryToolbar } from "../components/DiscoveryToolbar.tsx";
 import { MealImage } from "../components/MealImage.tsx";
-import { useMeals } from "../context/MealsProvider.tsx";
-import { selectList } from "../lib/catalog.ts";
-import { directionFrom, hrefFor, parseViewState, serializeViewState, sortKeyFrom } from "../lib/viewState.ts";
-import type { ViewState } from "../types/meal.ts";
+import { Pagination } from "../components/Pagination.tsx";
+import { ViewSwitch } from "../components/ViewSwitch.tsx";
+import { useCollection } from "../lib/useCollection.ts";
 import styles from "./ListPage.module.css";
 
+const EAGER_IMAGES = 8;
+const SKELETON_ROWS = Array.from({ length: 8 }, (_, index) => index);
+
 export function ListPage() {
-  const meals = useMeals();
-  const [params, setParams] = useSearchParams();
-  const view = parseViewState(params);
-  const results = selectList(meals.items, view.query, view.sortBy, view.direction);
-  const catalogMissing = meals.status === "error" && meals.items.length === 0;
-  const waiting = meals.status === "loading" && meals.items.length === 0;
+  const {
+    view,
+    waiting,
+    unavailable,
+    catalogSize,
+    categories,
+    featuredImageUrl,
+    results,
+    setView,
+    goToPage,
+    detailHref,
+    rememberPosition,
+  } = useCollection("list");
+  const listRef = useRef<HTMLUListElement>(null);
+  const emptyHeadingId = useId();
 
-  function update(partial: Partial<ViewState>) {
-    setParams(serializeViewState({ ...view, from: "list", ...partial }), { replace: true });
-  }
+  const changePage = (page: number) => {
+    goToPage(page);
+    listRef.current?.scrollIntoView({ block: "start" });
+  };
 
-  return (
-    <section className={styles.sheet}>
-      <h1>Meals</h1>
-      <form className={styles.toolbar} role="search" onSubmit={(event) => event.preventDefault()}>
-        <label className={styles.field}>
-          Search meals
-          <input
-            type="search"
-            value={view.query}
-            placeholder="Search by name"
-            onChange={(event) => update({ query: event.target.value })}
-          />
-        </label>
-        <label className={styles.field}>
-          Sort by
-          <select value={view.sortBy} onChange={(event) => update({ sortBy: sortKeyFrom(event.target.value) })}>
-            <option value="name">Name</option>
-            <option value="category">Category</option>
-          </select>
-        </label>
-        <label className={styles.field}>
-          Order
-          <select
-            value={view.direction}
-            onChange={(event) => update({ direction: directionFrom(event.target.value) })}
-          >
-            <option value="asc">Ascending</option>
-            <option value="desc">Descending</option>
-          </select>
-        </label>
-        {view.query.trim() ? (
-          <button type="button" className={styles.clear} onClick={() => update({ query: "" })}>
-            Clear search
-          </button>
-        ) : null}
-      </form>
-      <p className={styles.count} aria-live="polite">
-        {catalogMissing ? "No meals loaded" : `${results.length} meal${results.length === 1 ? "" : "s"}`}
-      </p>
-      {catalogMissing || waiting ? null : results.length === 0 ? (
-        <p className={styles.empty}>No meals match that search.</p>
-      ) : (
-        <ul className={styles.results}>
-          {results.map((meal) => (
+  let body = null;
+  if (waiting) {
+    body = (
+      <ul className={styles.rows} aria-hidden="true">
+        {SKELETON_ROWS.map((index) => (
+          <li key={index} className={styles.skeleton}>
+            <span className={styles.skeletonPhoto} />
+            <span className={styles.text}>
+              <span className={styles.skeletonName} />
+              <span className={styles.skeletonCategory} />
+            </span>
+          </li>
+        ))}
+      </ul>
+    );
+  } else if (unavailable) {
+    // CatalogStatus, rendered by App above every route, explains and offers Retry.
+  } else if (results.items.length === 0) {
+    body = (
+      <section className={styles.empty} aria-labelledby={emptyHeadingId}>
+        <h2 id={emptyHeadingId} className={styles.emptyTitle}>
+          No recipes match your search
+        </h2>
+        <p className={styles.emptyText}>Try a different name or fewer categories.</p>
+        <button
+          className={styles.emptyButton}
+          type="button"
+          onClick={() => setView({ ...view, query: "", categories: [], page: 1 })}
+        >
+          Show all recipes
+        </button>
+      </section>
+    );
+  } else {
+    body = (
+      <>
+        <ul ref={listRef} className={styles.rows} aria-label="Recipes">
+          {results.items.map((meal, index) => (
             <li key={meal.id}>
-              <Link className={styles.row} to={hrefFor(`/meal/${meal.id}`, { ...view, from: "list" })}>
-                <MealImage src={meal.imageUrl} alt="" className={styles.thumb} />
-                <span className={styles.name}>{meal.name}</span>
-                <span className={styles.category}>{meal.category}</span>
+              <Link className={styles.row} to={detailHref(meal.id)} onClick={rememberPosition}>
+                <MealImage
+                  src={meal.imageUrl}
+                  alt=""
+                  className={styles.photo}
+                  loading={index < EAGER_IMAGES ? "eager" : "lazy"}
+                />
+                <span className={styles.text}>
+                  <span className={styles.name} data-name>
+                    {meal.name}
+                  </span>
+                  <span className={styles.category} data-category>
+                    {meal.category}
+                  </span>
+                </span>
               </Link>
             </li>
           ))}
         </ul>
-      )}
-    </section>
+        <Pagination page={results.page} pageCount={results.pageCount} onPageChange={changePage} />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <CollectionIntro recipeCount={waiting || unavailable ? null : catalogSize} imageUrl={featuredImageUrl} />
+      <DiscoveryToolbar
+        view={view}
+        availableCategories={categories}
+        total={results.total}
+        loading={waiting}
+        unavailable={unavailable}
+        onChange={setView}
+        presentation={<ViewSwitch view={view} />}
+      />
+      {body}
+    </>
   );
 }

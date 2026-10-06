@@ -1,0 +1,33 @@
+.views {
+  display: inline-flex;
+  border: 1.5px solid var(--color-mist);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+}
+
+.views a {
+  font-size: 15px;
+  font-weight: 600;
+  padding: 7px 16px;
+  color: var(--color-ink-soft);
+  background: var(--color-white);
+  text-decoration: none;
+}
+
+.views a:hover {
+  color: var(--color-ink);
+  background: var(--color-hover);
+}
+
+.views a[aria-current="page"] {
+  background: var(--color-herb);
+  color: var(--color-white);
+}
+
+.views a:focus-visible {
+  outline-offset: -3px;
+}
+
+.views a[aria-current="page"]:focus-visible {
+  outline-color: var(--color-citron);
+}

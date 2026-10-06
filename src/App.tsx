@@ -1,4 +1,4 @@
-import { BrowserRouter, Link, NavLink, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Link, Navigate, Route, Routes } from "react-router-dom";
 import { CatalogStatus } from "./components/CatalogStatus.tsx";
 import { MealsProvider } from "./context/MealsProvider.tsx";
 import { DetailPage } from "./pages/DetailPage.tsx";
@@ -13,16 +13,12 @@ export default function App() {
       <MealsProvider>
         <div className={styles.page}>
           <header className={styles.header}>
-            <div>
-              <Link to="/list" className={styles.wordmark}>
-                Supper
-              </Link>
-              <p className={styles.tagline}>Recipes for dinner</p>
-            </div>
-            <nav className={styles.nav} aria-label="Views">
-              <NavLink to="/list">List</NavLink>
-              <NavLink to="/gallery">Gallery</NavLink>
-            </nav>
+            <Link to="/list" className={styles.brand}>
+              Everyday Table
+            </Link>
+            <Link to="/list" className={styles.headerLink}>
+              Browse recipes
+            </Link>
           </header>
           <main className={styles.main} id="content">
             <CatalogStatus />
@@ -34,7 +30,7 @@ export default function App() {
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </main>
-          <footer className={styles.footer}>Meals from the free TheMealDB catalog.</footer>
+          <footer className={styles.footer}>Recipes and photos from TheMealDB.</footer>
         </div>
       </MealsProvider>
     </BrowserRouter>

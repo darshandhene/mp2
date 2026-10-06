@@ -1,43 +1,76 @@
 :root {
-  --room: #1b3a2f;
-  --paper: #f7f3ea;
-  --ink: #221c16;
-  --paprika: #c73e2a;
-  --herb: #d6c7a1;
-  --line: #e4dccb;
-  --muted: #5e564c;
-  --font-display: "Fraunces", "Iowan Old Style", Palatino, "Palatino Linotype", serif;
-  --font-body: "Source Sans 3", "Avenir Next", "Segoe UI", sans-serif;
-  color-scheme: dark;
+  --color-porcelain: #fafbf8;
+  --color-white: #ffffff;
+  --color-ink: #302139;
+  --color-ink-soft: #5d5066;
+  --color-herb: #315c46;
+  --color-herb-dark: #244535;
+  --color-citron: #e7eba5;
+  --color-mist: #dce3dc;
+  --color-control-border: #b9c4ba;
+  --color-hover: #f0f3ee;
+  --radius-image: 14px;
+  --radius-control: 10px;
+  --radius-panel: 18px;
+  --font: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --page-max: 1200px;
+  --page-edge: 32px;
+  color-scheme: light;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --page-edge: 16px;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  min-height: 100vh;
-  background: var(--room);
-  color: #f4efe4;
-  font-family: var(--font-body);
-  font-size: 1.0625rem;
-  line-height: 1.5;
-}
-
-#root {
-  min-height: 100vh;
+  background: var(--color-porcelain);
+  color: var(--color-ink);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.55;
 }
 
 :focus-visible {
-  outline: 3px solid var(--paprika);
-  outline-offset: 3px;
+  outline: 3px solid var(--color-herb);
+  outline-offset: 2px;
 }
 
 h1,
-h2 {
-  font-family: var(--font-display);
-  font-weight: 680;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font);
+  font-weight: 700;
+  letter-spacing: -0.015em;
 }
 
-p {
-  overflow-wrap: anywhere;
+img {
+  display: block;
+  max-width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

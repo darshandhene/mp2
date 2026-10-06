@@ -1,34 +1,50 @@
-.loading,
-.notice {
-  margin: 0 0 1rem;
-}
-
 .notice {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: 0.75rem 1rem;
   align-items: center;
-  background: #f3e0c4;
-  color: #221c16;
-  padding: 0.75rem 1rem;
+  gap: 12px 16px;
+  margin-top: 24px;
+  padding: 14px 16px;
+  background: var(--color-white);
+  border: 1px solid var(--color-mist);
+  border-radius: var(--radius-control);
+  color: var(--color-ink);
+  font-size: 15px;
 }
 
-.notice p {
+.message {
+  flex: 1 1 280px;
   margin: 0;
 }
 
-.notice button {
+.detail {
+  color: var(--color-ink-soft);
+}
+
+.retry {
   font: inherit;
-  font-weight: 700;
-  background: #c73e2a;
-  color: #fff8f4;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-white);
+  background: var(--color-herb);
   border: 0;
-  padding: 0.45rem 0.8rem;
+  border-radius: var(--radius-control);
+  padding: 8px 16px;
   cursor: pointer;
 }
 
-.notice button:disabled {
+.retry:hover:not(:disabled) {
+  background: var(--color-herb-dark);
+}
+
+.retry:disabled {
   cursor: wait;
-  opacity: 0.7;
+  opacity: 0.75;
+}
+
+@media (max-width: 640px) {
+  .notice {
+    margin-top: 16px;
+  }
 }

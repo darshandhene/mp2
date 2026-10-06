@@ -28,6 +28,14 @@ export type ViewState = {
   sortBy: SortKey;
   direction: SortDirection;
   categories: string[];
+  page: number;
+};
+
+export type Page<T> = {
+  items: T[];
+  page: number;
+  pageCount: number;
+  total: number;
 };
 
 export type CatalogResult = {

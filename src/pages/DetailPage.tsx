@@ -3,16 +3,22 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { getMeal, toErrorMessage } from "../api/meals.ts";
 import { MealImage } from "../components/MealImage.tsx";
 import { useMeals } from "../context/MealsProvider.tsx";
-import { detailCollection, getNeighbors } from "../lib/catalog.ts";
+import { detailCollection, getNeighbors, pageForIndex } from "../lib/catalog.ts";
 import { hrefFor, parseViewState } from "../lib/viewState.ts";
-import type { MealDetail } from "../types/meal.ts";
+import type { MealDetail, ViewState } from "../types/meal.ts";
 import styles from "./DetailPage.module.css";
+
+const SITE_TITLE = "Everyday Table";
 
 type RecipeState = {
   id: string;
   meal: MealDetail | null;
   error: string | null;
 };
+
+type Position = { index: number; total: number; state: ViewState };
+
+type StepTarget = { href: string; name: string };
 
 export function DetailPage() {
   const { id = "" } = useParams();
@@ -38,58 +44,86 @@ export function DetailPage() {
   }, [id, attempt]);
 
   const current = request?.id === id ? request : null;
-  const collection = detailCollection(meals.items, id, view);
+  const { ids, state, inCatalog } = detailCollection(meals.items, id, view);
   const neighbors =
-    meals.items.length > 0 ? getNeighbors(collection.ids, id) : { previous: null, next: null };
-  const backHref = hrefFor(collection.state.from === "gallery" ? "/gallery" : "/list", collection.state);
+    meals.items.length > 0 ? getNeighbors(ids, id) : { previous: null, next: null };
+  const index = ids.indexOf(id);
+  const linkTo = (pathname: string, targetId: string) =>
+    hrefFor(pathname, { ...state, page: pageForIndex(ids.indexOf(targetId)) });
+  const backHref = linkTo(state.from === "gallery" ? "/gallery" : "/list", id);
+  const backLabel =
+    state.categories.length > 0
+      ? `Back to ${state.categories.join(" and ")} recipes`
+      : "Back to all recipes";
+  const position = index >= 0 ? { index, total: ids.length, state } : null;
+  const stepTarget = (targetId: string | null): StepTarget | null =>
+    targetId
+      ? {
+          href: linkTo(`/meal/${targetId}`, targetId),
+          name: meals.items.find((item) => item.id === targetId)?.name ?? "",
+        }
+      : null;
 
+  const mealName = current?.meal?.name;
   useEffect(() => {
-    document.title = current?.meal ? `${current.meal.name} — Supper` : "Supper";
+    if (!mealName) return;
+    document.title = `${mealName} — ${SITE_TITLE}`;
     return () => {
-      document.title = "Supper";
+      document.title = SITE_TITLE;
     };
-  }, [current]);
+  }, [mealName]);
 
-  const note = navigationNote(meals.status, meals.items.length, collection.inCatalog, neighbors);
+  const note = navigationNote(meals.status, meals.items.length, inCatalog, neighbors);
 
   return (
     <>
-      <nav className={styles.pager} aria-label="Recipe sequence">
-        {neighbors.previous ? (
-          <Link to={hrefFor(`/meal/${neighbors.previous}`, collection.state)}>Previous</Link>
-        ) : (
-          <button type="button" disabled>
-            Previous
-          </button>
-        )}
-        <Link to={backHref}>Back to results</Link>
-        {neighbors.next ? (
-          <Link to={hrefFor(`/meal/${neighbors.next}`, collection.state)}>Next</Link>
-        ) : (
-          <button type="button" disabled>
-            Next
-          </button>
-        )}
+      <nav className={styles.nav} aria-label="Recipe navigation">
+        <Link className={styles.back} to={backHref}>
+          {backLabel}
+        </Link>
+        <div className={styles.steps}>
+          <Step label="Previous" target={stepTarget(neighbors.previous)} />
+          <Step label="Next" target={stepTarget(neighbors.next)} className={styles.stepNext} />
+        </div>
       </nav>
       {note ? <p className={styles.note}>{note}</p> : null}
       {!current ? <p className={styles.pending}>Loading this recipe…</p> : null}
       {current?.error ? (
-        <div className={styles.sheet} role="alert">
+        <div className={styles.panel} role="alert">
           <p>{current.error}</p>
-          <button type="button" onClick={() => setAttempt((value) => value + 1)}>
+          <button className={styles.action} type="button" onClick={() => setAttempt((value) => value + 1)}>
             Retry
           </button>
         </div>
       ) : null}
       {current && !current.error && !current.meal ? (
-        <div className={styles.sheet}>
+        <div className={styles.panel}>
           <h1>Recipe not found</h1>
           <p>TheMealDB has no recipe for this address.</p>
-          <Link to="/list">Browse recipes</Link>
+          <Link className={styles.action} to="/list">
+            Browse recipes
+          </Link>
         </div>
       ) : null}
-      {current?.meal ? <Recipe meal={current.meal} /> : null}
+      {current?.meal ? <Recipe meal={current.meal} position={position} /> : null}
     </>
+  );
+}
+
+function Step({ label, target, className }: { label: string; target: StepTarget | null; className?: string }) {
+  const classes = [styles.step, className].filter(Boolean).join(" ");
+  if (!target) {
+    return (
+      <button className={classes} type="button" disabled>
+        <small className={styles.stepLabel}>{label}</small>
+      </button>
+    );
+  }
+  return (
+    <Link className={classes} to={target.href}>
+      <small className={styles.stepLabel}>{label}</small>
+      <span className={styles.stepName}>{target.name}</span>
+    </Link>
   );
 }
 
@@ -110,36 +144,66 @@ function navigationNote(
   return null;
 }
 
-function Recipe({ meal }: { meal: MealDetail }) {
+function describePosition({ index, total, state }: Position): string {
+  const scope = state.categories.length > 0 ? ` in ${state.categories.join(" and ")}` : "";
+  return `Recipe ${index + 1} of ${total}${scope}, sorted by ${state.sortBy}.`;
+}
+
+function paragraphsOf(instructions: string): string[] {
+  return instructions
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function Recipe({ meal, position }: { meal: MealDetail; position: Position | null }) {
+  const paragraphs = paragraphsOf(meal.instructions);
   return (
-    <article className={styles.sheet}>
-      <div className={styles.layout}>
-        <MealImage src={meal.imageUrl} alt={meal.name} className={styles.photo} />
-        <div>
-          <h1>{meal.name}</h1>
-          <p className={styles.meta}>
-            {meal.category}
-            {meal.area ? `, ${meal.area}` : ""}
+    <article className={styles.article}>
+      <section className={styles.hero}>
+        <MealImage src={meal.imageUrl} alt={meal.name} className={styles.photo} loading="eager" />
+        <div className={styles.titleBlock}>
+          <h1 className={styles.title}>{meal.name}</h1>
+          <p className={styles.tags}>
+            <span className={styles.tag}>{meal.category}</span>
+            {meal.area ? <span className={styles.tag}>{meal.area}</span> : null}
           </p>
-          <h2>Ingredients</h2>
+          {position ? <p className={styles.position}>{describePosition(position)}</p> : null}
+        </div>
+      </section>
+      <div className={styles.recipe}>
+        <section aria-labelledby="ingredients-heading">
+          <h2 id="ingredients-heading" className={styles.heading}>
+            Ingredients
+          </h2>
           {meal.ingredients.length === 0 ? (
-            <p>This recipe has no listed ingredients.</p>
+            <p className={styles.empty}>This recipe has no listed ingredients.</p>
           ) : (
-            <ul className={styles.ingredients}>
+            <ul className={styles.ingredients} aria-labelledby="ingredients-heading">
               {meal.ingredients.map((ingredient, index) => (
-                <li key={`${ingredient.name}-${index}`}>
-                  {ingredient.measure ? <span className={styles.measure}>{ingredient.measure}</span> : null}
-                  <span>{ingredient.name}</span>
+                <li className={styles.ingredient} key={`${ingredient.name}-${index}`}>
+                  <span className={styles.measure}>{ingredient.measure}</span>
+                  <span className={styles.ingredientName}>{ingredient.name}</span>
                 </li>
               ))}
             </ul>
           )}
-          <h2>Instructions</h2>
-          <p className={styles.instructions}>
-            {meal.instructions || "This recipe has no written instructions."}
-          </p>
+        </section>
+        <section className={styles.method} aria-labelledby="instructions-heading">
+          <h2 id="instructions-heading" className={styles.heading}>
+            Instructions
+          </h2>
+          {paragraphs.length === 0 ? (
+            <p className={styles.empty}>This recipe has no written instructions.</p>
+          ) : (
+            paragraphs.map((paragraph, index) => (
+              <p className={styles.paragraph} key={index}>
+                {paragraph}
+              </p>
+            ))
+          )}
           {meal.sourceUrl || meal.youtubeUrl ? (
-            <p className={styles.links}>
+            <div className={styles.links}>
               {meal.sourceUrl ? (
                 <a href={meal.sourceUrl} target="_blank" rel="noreferrer">
                   Recipe source
@@ -150,9 +214,9 @@ function Recipe({ meal }: { meal: MealDetail }) {
                   Video
                 </a>
               ) : null}
-            </p>
+            </div>
           ) : null}
-        </div>
+        </section>
       </div>
     </article>
   );

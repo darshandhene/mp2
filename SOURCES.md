@@ -10,5 +10,6 @@ Sources consulted while building this MP. The course `README.md` is the assignme
 - [Vite static deployment](https://vite.dev/guide/static-deploy.html), including the repository `base` of `/mp2/`.
 - [CSS Modules](https://vite.dev/guide/features.html#css-modules) and [Normalize.css](https://necolas.github.io/normalize.css/).
 - [MDN](https://developer.mozilla.org/en-US/docs/Learn_web_development) for HTML, CSS, and accessibility practices such as labels, `aria-pressed`, and visible focus.
-- [Fraunces](https://fonts.google.com/specimen/Fraunces) and [Source Sans 3](https://fonts.google.com/specimen/Source+Sans+3) from Google Fonts.
+- [Manrope](https://fonts.google.com/specimen/Manrope) from Google Fonts, licensed under the SIL Open Font License.
+- [Vitest](https://vitest.dev/guide/), [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/), and [user-event](https://testing-library.com/docs/user-event/intro) for automated tests.
 - LLM assistance: Cursor chat for this project generated application code. Submit this chatlog with the source, and answer the form's LLM survey questions.

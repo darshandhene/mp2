@@ -8,6 +8,12 @@ export function directionFrom(value: string): SortDirection {
   return value === "desc" ? "desc" : "asc";
 }
 
+function pageFrom(value: string | null): number {
+  if (value === null || !/^\d+$/.test(value)) return 1;
+  const page = Number(value);
+  return Number.isSafeInteger(page) && page > 0 ? page : 1;
+}
+
 export function parseViewState(params: URLSearchParams): ViewState {
   const from = params.get("from");
   const sortBy = params.get("sort");
@@ -21,6 +27,7 @@ export function parseViewState(params: URLSearchParams): ViewState {
     sortBy: sortBy === "category" ? "category" : "name",
     direction: direction === "desc" ? "desc" : "asc",
     categories,
+    page: pageFrom(params.get("page")),
   };
 }
 
@@ -31,6 +38,7 @@ export function serializeViewState(state: ViewState): URLSearchParams {
   if (state.sortBy !== "name") params.set("sort", state.sortBy);
   if (state.direction !== "asc") params.set("direction", state.direction);
   for (const category of state.categories) params.append("category", category);
+  if (state.page > 1) params.set("page", String(state.page));
   return params;
 }
 

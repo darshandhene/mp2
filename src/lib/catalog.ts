@@ -1,7 +1,25 @@
-import type { MealSummary, SortDirection, SortKey, ViewState } from "../types/meal.ts";
+import type { MealSummary, Page, SortDirection, SortKey, ViewState } from "../types/meal.ts";
+
+export const PAGE_SIZE = 24;
 
 function compareText(left: string, right: string): number {
   return left.localeCompare(right, "en", { numeric: true, sensitivity: "base" });
+}
+
+function comparatorFor(sortBy: SortKey, direction: SortDirection) {
+  const factor = direction === "desc" ? -1 : 1;
+  return (left: MealSummary, right: MealSummary): number => {
+    const primary =
+      sortBy === "category"
+        ? compareText(left.category, right.category)
+        : compareText(left.name, right.name);
+    if (primary !== 0) return primary * factor;
+    if (sortBy === "category") {
+      const byName = compareText(left.name, right.name);
+      if (byName !== 0) return byName;
+    }
+    return compareText(left.id, right.id);
+  };
 }
 
 export function selectList(
@@ -14,19 +32,7 @@ export function selectList(
   const matched = needle
     ? items.filter((item) => item.name.toLowerCase().includes(needle))
     : items.slice();
-  const factor = direction === "desc" ? -1 : 1;
-  return matched.sort((left, right) => {
-    const primary =
-      sortBy === "category"
-        ? compareText(left.category, right.category)
-        : compareText(left.name, right.name);
-    if (primary !== 0) return primary * factor;
-    if (sortBy === "category") {
-      const byName = compareText(left.name, right.name);
-      if (byName !== 0) return byName;
-    }
-    return compareText(left.id, right.id);
-  });
+  return matched.sort(comparatorFor(sortBy, direction));
 }
 
 export function selectGallery(items: readonly MealSummary[], categories: readonly string[]): MealSummary[] {
@@ -40,6 +46,33 @@ export function selectGallery(items: readonly MealSummary[], categories: readonl
     return true;
   });
   return unique.sort((left, right) => compareText(left.name, right.name) || compareText(left.id, right.id));
+}
+
+export function selectCollection(items: readonly MealSummary[], view: ViewState): MealSummary[] {
+  const needle = view.query.trim().toLowerCase();
+  const selected = new Set(view.categories.map((category) => category.trim()).filter(Boolean));
+  const seen = new Set<string>();
+  const matched = items.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    if (needle && !item.name.toLowerCase().includes(needle)) return false;
+    return selected.size === 0 || selected.has(item.category);
+  });
+  return matched.sort(comparatorFor(view.sortBy, view.direction));
+}
+
+export function paginate<T>(items: readonly T[], requestedPage: number, pageSize = PAGE_SIZE): Page<T> {
+  const total = items.length;
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const requested = Number.isInteger(requestedPage) ? requestedPage : 1;
+  const page = Math.min(Math.max(requested, 1), pageCount);
+  const start = (page - 1) * pageSize;
+  return { items: items.slice(start, start + pageSize), page, pageCount, total };
+}
+
+export function pageForIndex(index: number, pageSize = PAGE_SIZE): number {
+  if (!Number.isInteger(index) || index < 0) return 1;
+  return Math.floor(index / pageSize) + 1;
 }
 
 export function getNeighbors(
@@ -60,6 +93,7 @@ const NAME_ORDER: ViewState = {
   sortBy: "name",
   direction: "asc",
   categories: [],
+  page: 1,
 };
 
 export function detailCollection(
@@ -68,17 +102,15 @@ export function detailCollection(
   state: ViewState,
 ): { ids: string[]; state: ViewState; inCatalog: boolean } {
   const inCatalog = items.some((item) => item.id === mealId);
-  const selected =
-    state.from === "gallery"
-      ? selectGallery(items, state.categories)
-      : selectList(items, state.query, state.sortBy, state.direction);
+  const selected = selectCollection(items, state);
   if (selected.some((item) => item.id === mealId)) {
     return { ids: selected.map((item) => item.id), state, inCatalog };
   }
   if (inCatalog) {
+    const fallback: ViewState = { ...NAME_ORDER, from: state.from };
     return {
-      ids: selectList(items, "", "name", "asc").map((item) => item.id),
-      state: NAME_ORDER,
+      ids: selectCollection(items, fallback).map((item) => item.id),
+      state: fallback,
       inCatalog,
     };
   }
