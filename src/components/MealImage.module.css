@@ -1,0 +1,8 @@
+.fallback {
+  display: grid;
+  place-items: center;
+  background: #e7e0d2;
+  color: #5e564c;
+  font-size: 0.8rem;
+  text-align: center;
+}

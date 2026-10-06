@@ -1,0 +1,122 @@
+.pager {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.pager a,
+.pager button {
+  font: inherit;
+  font-weight: 700;
+  color: #f4efe4;
+  background: transparent;
+  border: 0;
+  text-decoration: none;
+  padding: 0.35rem 0;
+}
+
+.pager button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.note,
+.pending {
+  margin-top: 0;
+}
+
+.sheet {
+  background: var(--paper);
+  color: var(--ink);
+  color-scheme: light;
+  padding: 1.25rem;
+}
+
+.sheet h1 {
+  margin: 0 0 0.4rem;
+  font-size: 2.4rem;
+}
+
+.sheet h2 {
+  margin: 1.4rem 0 0.4rem;
+  font-size: 1.5rem;
+}
+
+.sheet button {
+  font: inherit;
+  font-weight: 700;
+  background: var(--paprika);
+  color: #fff8f4;
+  border: 0;
+  padding: 0.45rem 0.8rem;
+  cursor: pointer;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.photo {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: #e7e0d2;
+}
+
+.meta {
+  margin-top: 0;
+  color: var(--muted);
+}
+
+.ingredients {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ingredients li {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.3rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.measure {
+  flex: 0 0 7.5rem;
+  color: var(--muted);
+}
+
+.instructions {
+  max-width: 62ch;
+  white-space: pre-wrap;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.links a {
+  color: #8e2618;
+  font-weight: 700;
+}
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sheet h1 {
+    font-size: 2rem;
+  }
+
+  .measure {
+    flex-basis: 5.5rem;
+  }
+}

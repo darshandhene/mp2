@@ -1,0 +1,44 @@
+
+# Local project history and context
+/PROJECT_CONTEXT.md
+
+# Personal tech stack learning guide
+/TECH_STACK_GUIDE.md
+
+# Local implementation plans and agent handoffs
+/docs/superpowers/
+/MULTI_AGENT_PLAN.md
+
+# Dependencies, generated output, and local configuration
+/node_modules/
+/dist/
+/coverage/
+/test-results/
+/playwright-report/
+.env
+.env.*
+!.env.example
+*.local
+.DS_Store
+
+# Non-submission design, planning, and agent working documents
+/docs/plans/
+/docs/design/
+/docs/research/
+/docs/learning/
+/docs/agent-notes/
+# Keep README, SOURCES, and required submission/chatlog files trackable.
+
+# Vite and local tooling
+logs
+*.log
+npm-debug.log*
+dist-ssr
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
